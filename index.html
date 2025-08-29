@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passport Photo Grid Creator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            height: fit-content;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .control-group h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .upload-area {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: #f0f8ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background: #f0fff4;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+
+        .grid-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .grid-option {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .grid-option:hover {
+            border-color: #3498db;
+            background: #f8f9ff;
+        }
+
+        .grid-option.active {
+            border-color: #3498db;
+            background: #3498db;
+            color: white;
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e9ecef;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: none;
+        }
+
+        .value-display {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+
+        .preview-area {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .no-image {
+            color: #999;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .photo-grid {
+            background: white;
+            padding: 20mm;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+
+        .grid-container {
+            display: grid;
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        .photo-cell {
+            overflow: hidden;
+            position: relative;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+
+        .photo-cell img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .print-button, .download-button {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .download-button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .print-button:hover, .download-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .print-button:hover {
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+        }
+
+        .download-button:hover {
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        }
+
+        .print-button:disabled, .download-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .photo-grid, .photo-grid * {
+                visibility: visible;
+            }
+            
+            .photo-grid {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100% !important;
+                max-width: none !important;
+                max-height: none !important;
+                box-shadow: none;
+                margin: 0;
+                padding: 10mm;
+            }
+            
+            .print-button {
+                display: none;
+            }
+
+            .action-buttons {
+                display: none;
+            }
+        }
+
+        .preview-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .zoom-controls button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .zoom-controls button:hover {
+            background: #2980b9;
+        }
+
+        .current-zoom {
+            color: #666;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .grid-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 Passport Photo Grid Creator</h1>
+            <p>Upload your photo and create professional passport photo grids</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="controls">
+                <div class="control-group">
+                    <h3>Upload Photo</h3>
+                    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon">📤</div>
+                        <p><strong>Click to upload</strong> or drag & drop</p>
+                        <p>Supports JPG, PNG, WebP</p>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+
+                <div class="control-group">
+                    <h3>Grid Layout</h3>
+                    <div class="grid-options">
+                        <div class="grid-option active" data-grid="2x2">2×2</div>
+                        <div class="grid-option" data-grid="2x3">2×3</div>
+                        <div class="grid-option" data-grid="3x4">3×4</div>
+                        <div class="grid-option" data-grid="4x6">4×6</div>
+                        <div class="grid-option" data-grid="2x4">2×4</div>
+                        <div class="grid-option" data-grid="3x5">3×5</div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Photo Size</h3>
+                    <div class="slider-group">
+                        <label>Width: <span class="value-display" id="widthValue">35mm</span></label>
+                        <input type="range" class="slider" id="widthSlider" min="25" max="60" value="35">
+                    </div>
+                    <div class="slider-group">
+                        <label>Height: <span class="value-display" id="heightValue">45mm</span></label>
+                        <input type="range" class="slider" id="heightSlider" min="30" max="70" value="45">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Spacing</h3>
+                    <div class="slider-group">
+                        <label>Gutter Width: <span class="value-display" id="gutterValue">5mm</span></label>
+                        <input type="range" class="slider" id="gutterSlider" min="2" max="15" value="5">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Photo Position</h3>
+                    <div class="slider-group">
+                        <label>Zoom: <span class="value-display" id="zoomValue">100%</span></label>
+                        <input type="range" class="slider" id="zoomSlider" min="50" max="200" value="100">
+                    </div>
+                    <div class="slider-group">
+                        <label>Horizontal: <span class="value-display" id="posXValue">50%</span></label>
+                        <input type="range" class="slider" id="posXSlider" min="0" max="100" value="50">
+                    </div>
+                    <div class="slider-group">
+                        <label>Vertical: <span class="value-display" id="posYValue">50%</span></label>
+                        <input type="range" class="slider" id="posYSlider" min="0" max="100" value="50">
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-area">
+                <div class="no-image" id="noImageMessage">
+                    <p>📷 Upload an image to start creating your photo grid</p>
+                </div>
+                <div class="photo-grid" id="photoGrid" style="display: none;">
+                    <div class="grid-container" id="gridContainer"></div>
+                </div>
+                <div class="action-buttons" id="actionButtons" style="display: none;">
+                    <button class="print-button" onclick="window.print()">
+                        🖨️ Print Grid
+                    </button>
+                    <button class="download-button" id="downloadButton" onclick="downloadGrid()">
+                        💾 Download Image
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedImage = null;
+        let currentGrid = '2x2';
+
+        // File upload handling
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.querySelector('.upload-area');
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedImage = e.target.result;
+                updateGrid();
+                document.getElementById('noImageMessage').style.display = 'none';
+                document.getElementById('photoGrid').style.display = 'block';
+                document.getElementById('actionButtons').style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Grid selection
+        document.querySelectorAll('.grid-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                document.querySelector('.grid-option.active').classList.remove('active');
+                e.target.classList.add('active');
+                currentGrid = e.target.dataset.grid;
+                updateGrid();
+            });
+        });
+
+        // Slider controls
+        const sliders = {
+            width: document.getElementById('widthSlider'),
+            height: document.getElementById('heightSlider'),
+            gutter: document.getElementById('gutterSlider'),
+            zoom: document.getElementById('zoomSlider'),
+            posX: document.getElementById('posXSlider'),
+            posY: document.getElementById('posYSlider')
+        };
+
+        const valueDisplays = {
+            width: document.getElementById('widthValue'),
+            height: document.getElementById('heightValue'),
+            gutter: document.getElementById('gutterValue'),
+            zoom: document.getElementById('zoomValue'),
+            posX: document.getElementById('posXValue'),
+            posY: document.getElementById('posYValue')
+        };
+
+        // Update value displays and grid when sliders change
+        Object.keys(sliders).forEach(key => {
+            sliders[key].addEventListener('input', (e) => {
+                const value = e.target.value;
+                let displayValue;
+                
+                switch(key) {
+                    case 'width':
+                    case 'height':
+                    case 'gutter':
+                        displayValue = value + 'mm';
+                        break;
+                    case 'zoom':
+                    case 'posX':
+                    case 'posY':
+                        displayValue = value + '%';
+                        break;
+                }
+                
+                valueDisplays[key].textContent = displayValue;
+                updateGrid();
+            });
+        });
+
+        function updateGrid() {
+            if (!uploadedImage) return;
+
+            const gridContainer = document.getElementById('gridContainer');
+            const [cols, rows] = currentGrid.split('x').map(Number);
+            
+            const width = sliders.width.value;
+            const height = sliders.height.value;
+            const gutter = sliders.gutter.value;
+            const zoom = sliders.zoom.value;
+            const posX = sliders.posX.value;
+            const posY = sliders.posY.value;
+
+            // Set up grid container
+            gridContainer.style.gridTemplateColumns = `repeat(${cols}, ${width}mm)`;
+            gridContainer.style.gridTemplateRows = `repeat(${rows}, ${height}mm)`;
+            gridContainer.style.gap = `${gutter}mm`;
+
+            // Clear existing photos
+            gridContainer.innerHTML = '';
+
+            // Create photo cells
+            for (let i = 0; i < cols * rows; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'photo-cell';
+                
+                const img = document.createElement('img');
+                img.src = uploadedImage;
+                img.style.transform = `scale(${zoom / 100})`;
+                img.style.objectPosition = `${posX}% ${posY}%`;
+                
+                cell.appendChild(img);
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        // Initialize value displays
+        Object.keys(sliders).forEach(key => {
+            const value = sliders[key].value;
+            let displayValue;
+            
+            switch(key) {
+                case 'width':
+                case 'height':
+                case 'gutter':
+                    displayValue = value + 'mm';
+                    break;
+                case 'zoom':
+                case 'posX':
+                case 'posY':
+                    displayValue = value + '%';
+                    break;
+            }
+            
+            valueDisplays[key].textContent = displayValue;
+        });
+
+        // Download function
+        function downloadGrid() {
+            if (!uploadedImage) return;
+
+            const gridContainer = document.getElementById('gridContainer');
+            const photoGrid = document.getElementById('photoGrid');
+            
+            // Create a temporary canvas for high-quality rendering
+            html2canvas(photoGrid, {
+                backgroundColor: '#ffffff',
+                scale: 3, // Higher resolution for better quality
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                width: photoGrid.offsetWidth,
+                height: photoGrid.offsetHeight
+            }).then(canvas => {
+                // Create download link
+                const link = document.createElement('a');
+                link.download = 'passport-photo-grid.png';
+                link.href = canvas.toDataURL('image/png', 1.0);
+                
+                // Trigger download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }).catch(err => {
+                console.error('Error generating image:', err);
+                // Fallback to basic canvas method
+                downloadGridFallback();
+            });
+        }
+
+        // Fallback download method using basic canvas
+        function downloadGridFallback() {
+            const gridContainer = document.getElementById('gridContainer');
+            const [cols, rows] = currentGrid.split('x').map(Number);
+            
+            const width = parseInt(sliders.width.value);
+            const height = parseInt(sliders.height.value);
+            const gutter = parseInt(sliders.gutter.value);
+            const zoom = parseFloat(sliders.zoom.value) / 100;
+            const posX = parseFloat(sliders.posX.value) / 100;
+            const posY = parseFloat(sliders.posY.value) / 100;
+
+            // Convert mm to pixels (assuming 300 DPI)
+            const mmToPx = 11.81; // 300 DPI conversion
+            const cellWidth = width * mmToPx;
+            const cellHeight = height * mmToPx;
+            const gutterPx = gutter * mmToPx;
+            
+            const canvasWidth = (cellWidth * cols) + (gutterPx * (cols - 1)) + (gutterPx * 2);
+            const canvasHeight = (cellHeight * rows) + (gutterPx * (rows - 1)) + (gutterPx * 2);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            const ctx = canvas.getContext('2d');
+
+            // Fill background with white
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            img.onload = function() {
+                // Calculate image dimensions and position
+                const imgAspect = img.width / img.height;
+                const cellAspect = cellWidth / cellHeight;
+                
+                let drawWidth, drawHeight;
+                if (imgAspect > cellAspect) {
+                    drawHeight = cellHeight * zoom;
+                    drawWidth = drawHeight * imgAspect;
+                } else {
+                    drawWidth = cellWidth * zoom;
+                    drawHeight = drawWidth / imgAspect;
+                }
+
+                // Draw grid of photos
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        const x = gutterPx + col * (cellWidth + gutterPx);
+                        const y = gutterPx + row * (cellHeight + gutterPx);
+                        
+                        // Calculate crop position
+                        const cropX = (drawWidth - cellWidth) * posX;
+                        const cropY = (drawHeight - cellHeight) * posY;
+                        
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.rect(x, y, cellWidth, cellHeight);
+                        ctx.clip();
+                        
+                        ctx.drawImage(
+                            img,
+                            x - cropX,
+                            y - cropY,
+                            drawWidth,
+                            drawHeight
+                        );
+                        
+                        ctx.restore();
+                    }
+                }
+
+                // Download the canvas
+                const link = document.createElement('a');
+                link.download = 'passport-photo-grid.png';
+                link.href = canvas.toDataURL('image/png', 1.0);
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            img.src = uploadedImage;
+        }
+
+        // Try to load html2canvas library for better quality
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        script.onerror = function() {
+            console.log('html2canvas not available, using fallback method');
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>
